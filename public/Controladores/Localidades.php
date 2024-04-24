@@ -10,7 +10,7 @@ $app->addRoutingMiddleware();
 $app->addErrorMiddleware(true, true, true);
 
 //1 A
-$app->POST('/localidades', function ($request, $response, $args) {
+$app->POST('/localidades/crear', function ($request, $response, $args) {
     $datos= $request->getParsedBody(); //Obtenemos los datos del PostMan
     if(!isset($datos["nombre"]) || empty($datos["nombre"])){ //si no existe nombre en el arreglo asociativo O el dato es nulo
         $payload = json_encode(['error' => 'El campo es requerido', 'code' => 400]);
@@ -62,7 +62,7 @@ $app->POST('/localidades', function ($request, $response, $args) {
 });
 
 //1 B
-$app->PUT('/localidades/{id}', function ($request, $response, $args){
+$app->PUT('/localidades/{id}/editar', function ($request, $response, $args){
     $datos= $request->getParsedBody(); //Obtengo los datos del cuerpo de la solicitud (Array asociativo)
     
     if (!isset($datos["nombre"]) | empty($datos["nombre"]) | !isset($args["id"]) | empty($args["id"])){
@@ -127,7 +127,7 @@ $app->PUT('/localidades/{id}', function ($request, $response, $args){
 
 
 //1 C
-$app->DELETE('/localidades/{id}',function ($request, $response, $args){
+$app->DELETE('/localidades/{id}/eliminar',function ($request, $response, $args){
     $id= $args['id'];
     try{
         $connection= getConnection();
@@ -172,7 +172,7 @@ $app->DELETE('/localidades/{id}',function ($request, $response, $args){
 });
 
 //1 D
-$app->GET('/localidades', function(request $request, response $response){
+$app->GET('/localidades/listar', function(request $request, response $response){
     $connection = getConnection(); //Obtiene la conexion a la base de datos
     try {
         $query = $connection->query('SELECT nombre FROM localidades');

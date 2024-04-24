@@ -11,7 +11,7 @@ $app->addErrorMiddleware(true, true, true);
 
 
 //5 A
-$app->POST('/reservas', function ($request, $response, $args){
+$app->POST('/reservas/crear', function ($request, $response, $args){
     $datos = $request->getParsedBody();
     $camposRequeridos = ['propiedad_id', 'inquilino_id', 'fecha_desde', 'cantidad_noches'];
     $tipos = ['integer', 'integer', 'datetime', 'integer'];
@@ -93,7 +93,7 @@ $app->POST('/reservas', function ($request, $response, $args){
 });
 
 //5 B
-$app->PUT('/reservas/{id}', function ($request, $response, $args){
+$app->PUT('/reservas/{id}/editar', function ($request, $response, $args){
     $datos = $request->getParsedBody();
     $camposRequeridos = ['propiedad_id', 'inquilino_id', 'fecha_desde', 'cantidad_noches'];
     $tipos = ['integer', 'integer', 'datetime', 'integer'];
@@ -194,7 +194,7 @@ $app->PUT('/reservas/{id}', function ($request, $response, $args){
 });
 
 //5 C
-$app->DELETE('/reservas/{id}',function ($request, $response, $args){ //duda
+$app->DELETE('/reservas/{id}/eliminar',function ($request, $response, $args){ //duda
     try{
         $connection = getConnection();
         
@@ -241,7 +241,7 @@ $app->DELETE('/reservas/{id}',function ($request, $response, $args){ //duda
 });
 
 //5 D
-$app->GET('/reservas', function (Request $request, Response $response){
+$app->GET('/reservas/listar', function (Request $request, Response $response){
     $connection = getConnection(); 
     try {
         $query = $connection->query('SELECT * FROM reservas');

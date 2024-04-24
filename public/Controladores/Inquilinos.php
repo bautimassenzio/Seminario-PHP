@@ -10,7 +10,7 @@ $app->addRoutingMiddleware();
 $app->addErrorMiddleware(true, true, true);
 
 //3 A
-$app->POST('/inquilinos', function ($request, $response, $args) {
+$app->POST('/inquilinos/crear', function ($request, $response, $args) {
     $datos = $request->getParsedBody(); //Obtenemos los datos del PostMan
     
     // Verificamos que se hayan proporcionado todos los datos necesarios
@@ -65,7 +65,7 @@ $app->POST('/inquilinos', function ($request, $response, $args) {
 });
 
 //3 B
-$app->PUT('/inquilinos/{id}', function ($request, $response, $args){
+$app->PUT('/inquilinos/{id}/editar', function ($request, $response, $args){
     $datos = $request->getParsedBody();
 
     $camposRequeridos = ['nombre', 'apellido', 'documento', 'email', 'activo'];
@@ -130,7 +130,7 @@ $app->PUT('/inquilinos/{id}', function ($request, $response, $args){
 });
 
 //3 C
-$app->DELETE('/inquilinos/{id}',function ($request, $response, $args){
+$app->DELETE('/inquilinos/{id}/eliminar',function ($request, $response, $args){
     try{
         $connection = getConnection();
 
@@ -175,10 +175,10 @@ $app->DELETE('/inquilinos/{id}',function ($request, $response, $args){
 });
 
 //3 D
-$app->GET('/inquilinos', function (Request $request, Response $response){
+$app->GET('/inquilinos/listar', function (Request $request, Response $response){
     $connection = getConnection(); 
     try {
-        $query = $connection->query('SELECT * FROM inqulinos');
+        $query = $connection->query('SELECT * FROM inquilinos');
         $tipos = $query->fetchAll(PDO::FETCH_ASSOC);
 
         $payload = json_encode([
@@ -193,6 +193,80 @@ $app->GET('/inquilinos', function (Request $request, Response $response){
         $payload = json_encode([
             'status' => 'success',
             'code' => 400,
+            'data' => $e->getMessage()
+        ]);
+
+        $response->getBody()->write($payload);
+        return $response->withHeader('Content-Type', 'application/json');
+    }
+});
+
+//3 E
+$app->GET('/inquilinos/{id}/ver-inquilino', function (Request $request, Response $response, $args){
+    $connection = getConnection(); 
+    try {
+        $sql = "SELECT * FROM inquilinos WHERE id = '" . $args['id'] . "'";
+        $consultaRepetido = $connection->query($sql);
+
+        if ($consultaRepetido->rowCount() > 0) { 
+            $tabla = $consultaRepetido->fetchAll(PDO::FETCH_ASSOC);
+            $payload = json_encode(['status' => 'success', 'code' => 200, 'data' => $tabla]);
+            $response->getBody()->write($payload);
+            return $response;
+        }
+        
+        $payload = json_encode([
+            'status' => 'error',
+            'code' => 400, 
+            'data' => 'No se encontro el id en la tabla inquilinos'
+        ]);
+        $response->getBody()->write($payload);
+        return $response;
+
+
+    } catch (PDOException $e) {
+        $payload = json_encode([
+            'status' => 'success',
+            'code' => 400,
+            'data' => $e->getMessage()
+        ]);
+
+        $response->getBody()->write($payload);
+        return $response->withHeader('Content-Type', 'application/json');
+    }
+});
+
+//3 F
+$app->GET('/inquilinos/{id}/reservas/historial', function (Request $request, Response $response, $args){
+    $connection = getConnection(); 
+    try {
+        $sql = "SELECT * FROM inquilinos WHERE id = '" . $args['id'] . "'";
+        $consultaRepetido = $connection->query($sql);
+
+        if ($consultaRepetido->rowCount() == 0) { 
+            $payload = json_encode(['status' => 'error', 'code' => 400, 'data' => 'Debe ingresar un id que existan en la tabla inquilinos']);
+            $response->getBody()->write($payload);
+            return $response;
+        }
+        
+        $sql = "SELECT * FROM reservas WHERE inquilino_id = '" . $args['id'] . "'";
+        $consultaRepetido = $connection->query($sql);
+        $tabla = $consultaRepetido->fetchAll(PDO::FETCH_ASSOC);
+
+        $payload = json_encode([
+            'status' => 'success',
+            'code' => 200, 
+            'data' => $tabla
+        ]);
+        $response->getBody()->write($payload);
+        return $response;
+
+
+    } catch (PDOException $e) {
+        $payload = json_encode([
+            'status' => 'success',
+            'code' => 400,
+            'data' => $e->getMessage()
         ]);
 
         $response->getBody()->write($payload);

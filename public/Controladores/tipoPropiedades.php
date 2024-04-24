@@ -11,7 +11,7 @@ $app->addErrorMiddleware(true, true, true);
 
 
 //2 A
-$app->POST('/tipos_propiedad', function ($request, $response, $args) {
+$app->POST('/tipos_propiedad/crear', function ($request, $response, $args) {
     $datos= $request->getParsedBody(); 
     if(!isset($datos["nombre"]) || empty($datos["nombre"])){ 
         $payload = json_encode(['error' => 'El campo es requerido', 'code' => 400]);
@@ -59,7 +59,7 @@ $app->POST('/tipos_propiedad', function ($request, $response, $args) {
 });
 
 //2 B
-$app->PUT('/tipos_propiedad/{id}', function ($request, $response, $args){
+$app->PUT('/tipos_propiedad/{id}/editar', function ($request, $response, $args){
     $datos= $request->getParsedBody(); //Obtengo los datos del cuerpo de la solicitud (Array asociativo)
     
     if (!isset($datos["nombre"]) | empty($datos["nombre"]) | !isset($args["id"]) | empty($args["id"])){
@@ -124,7 +124,7 @@ $app->PUT('/tipos_propiedad/{id}', function ($request, $response, $args){
 });
 
 //2 C
-$app->DELETE('/tipos_propiedad/{id}',function ($request, $response, $args){
+$app->DELETE('/tipos_propiedad/{id}/eliminar',function ($request, $response, $args){
     $id= $args['id'];
     try{
         $connection= getConnection();
@@ -169,7 +169,7 @@ $app->DELETE('/tipos_propiedad/{id}',function ($request, $response, $args){
 });
 
 //2 D
-$app->GET('/tipos_propiedad', function (Request $request, Response $response){
+$app->GET('/tipos_propiedad/listar', function (Request $request, Response $response){
     $connection = getConnection(); 
     try {
         $query = $connection->query('SELECT nombre FROM tipo_propiedades');
