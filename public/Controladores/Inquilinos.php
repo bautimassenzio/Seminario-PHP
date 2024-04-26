@@ -200,7 +200,7 @@ $app->GET('/inquilinos/listar', function (Request $request, Response $response){
         return $response->withHeader('Content-Type', 'application/json');
     }
 });
-
+//SELECT * PROPIEDADES WHERE 1=1 
 //3 E
 $app->GET('/inquilinos/{id}/ver-inquilino', function (Request $request, Response $response, $args){
     $connection = getConnection(); 
