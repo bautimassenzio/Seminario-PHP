@@ -11,16 +11,19 @@ $app->addBodyParsingMiddleware();
 $app->addRoutingMiddleware();
 $app->addErrorMiddleware(true, true, true);
 
-function validarTipos ($datos, $campos, $tipos, &$errores){
+function validarTipos ($datos, $campos, $tipos, $longitudes, &$errores){
     foreach($campos as $indice => $campo){
         if (!isset($datos[$campo]) || empty($datos[$campo]) || trim($datos[$campo])===''){
             array_push($errores,"El campo " . $campo . " es requerido");
         } else{
             $tipo = $tipos[$indice];
+            $longitud = $longitudes[$indice];
             switch($tipo){
                 case 'string':
                     if (is_numeric($datos[$campo])){
                         array_push($errores,"El campo " . $campo . " debe ser del tipo " . $tipo);
+                    } elseif (strlen($datos[$campo])>$longitud){
+                        array_push($errores, "El campo " . $campo . " excede la longitud maxima de " . $longitud);
                     }
                     break;
                 case 'integer':

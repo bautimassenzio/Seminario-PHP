@@ -11,13 +11,13 @@ $app->addErrorMiddleware(true, true, true);
 
 //3 A
 $app->POST('/inquilinos/crear', function ($request, $response, $args) {
-    $datos = $request->getParsedBody(); //Obtenemos los datos del PostMan
+    $datos = $request->getParsedBody(); 
     
-    // Verificamos que se hayan proporcionado todos los datos necesarios
     $camposRequeridos = ['nombre', 'apellido', 'documento', 'email', 'activo'];
     $errores=[];
     $tipos=['string', 'string', 'integer', 'string', 'string'];
-    validarTipos($datos,$camposRequeridos, $tipos, $errores);
+    $longitudes = [20,15,0,20,5];
+    validarTipos($datos,$camposRequeridos, $tipos, $longitudes, $errores);
     if (!empty($errores)){
         $payload = json_encode(['error' => $errores, 'code' => 400]);
         $response->getBody()->write($payload);
