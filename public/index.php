@@ -13,7 +13,7 @@ $app->addErrorMiddleware(true, true, true);
 
 function validarTipos ($datos, $campos, $tipos, $longitudes, &$errores){
     foreach($campos as $indice => $campo){
-        if (!isset($datos[$campo]) || empty($datos[$campo]) || trim($datos[$campo])===''){
+        if (!isset($datos[$campo]) || (empty($datos[$campo]) && $datos[$campo] != 0) || trim($datos[$campo])===''){
             array_push($errores,"El campo " . $campo . " es requerido");
         } else{
             $tipo = $tipos[$indice];
@@ -34,8 +34,11 @@ function validarTipos ($datos, $campos, $tipos, $longitudes, &$errores){
                 case 'datetime':
                     $date = DateTime::createFromFormat('Y-m-d', $datos[$campo]);
                     if ($date === false || $date->format('Y-m-d') != $datos['fecha_desde']){
-                        array_push($errores, "El campo " . $campo . " debe ser del tipo " . $tipo);
+                        array_push($errores, "El campo " . $campo . " debe ser del tipo " . $tipo . " (ANIO - MES - DIA)");
                     }
+                    break;
+                case 'boolean':
+                    $datos[$campo] = filter_var($datos[$campo], FILTER_VALIDATE_BOOLEAN);
                     break;
                 default:
                 array_push($errores,"Tipo de dato no valido para el campo ". $campo);

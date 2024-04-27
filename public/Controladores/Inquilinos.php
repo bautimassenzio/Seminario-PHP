@@ -15,53 +15,53 @@ $app->POST('/inquilinos/crear', function ($request, $response, $args) {
     
     $camposRequeridos = ['nombre', 'apellido', 'documento', 'email', 'activo'];
     $errores=[];
-    $tipos=['string', 'string', 'integer', 'string', 'string'];
-    $longitudes = [20,15,0,20,5];
+    $tipos=['string', 'string', 'integer', 'string', 'boolean'];
+    $longitudes = [20,15,0,20,0];
     validarTipos($datos,$camposRequeridos, $tipos, $longitudes, $errores);
-    if (!empty($errores)){
-        $payload = json_encode(['error' => $errores, 'code' => 400]);
-        $response->getBody()->write($payload);
-        return $response;
+
+    if (empty($errores)){
+    
+        try {
+
+            $connection = getConnection(); 
+            $sql = "SELECT * FROM inquilinos WHERE documento = '" . $datos['documento'] . "'";
+            $consultaRepetido = $connection->query($sql);
+
+            if ($consultaRepetido->rowCount() > 0) { 
+                array_push ($errores, "El documento " . $datos['documento'] . " no puede repetirse");
+            }else {
+                $sql = "INSERT INTO inquilinos (nombre, apellido, documento, email, activo) 
+                        VALUES (:nombre, :apellido, :documento, :email, :activo)";
+                $stmt = $connection->prepare($sql);
+                $stmt->bindParam(':nombre', $datos['nombre']);
+                $stmt->bindParam(':apellido', $datos['apellido']);
+                $stmt->bindParam(':documento', $datos['documento']);
+                $stmt->bindParam(':email', $datos['email']);
+                $stmt->bindParam(':activo', $datos['activo'], PDO::PARAM_BOOL);
+                $stmt->execute();
+        
+                $payload = json_encode([
+                    'status' => 'success',
+                    'code' => 201, 
+                    'data' => 'Operacion exitosa'
+                ]);
+                $response->getBody()->write($payload);
+                return $response;
+            }
+        } catch (PDOException $e) {
+            $payload = json_encode([
+                'status' => 'error',
+                'mensaje' => $e->getMessage()
+            ]); 
+            $response->getBody()->write($payload);
+            return $response;      
+        }   
     }
 
-    $datos['activo'] = filter_var($datos['activo'], FILTER_VALIDATE_BOOLEAN); // Convertimos a boolean
+    $payload = json_encode(['error' => $errores, 'code' => 400]);
+    $response->getBody()->write($payload);
+    return $response;
     
-    try {
-        $connection = getConnection(); 
-        $sql = "SELECT * FROM inquilinos WHERE documento = '" . $datos['documento'] . "'";
-        $consultaRepetido = $connection->query($sql);
-
-        if ($consultaRepetido->rowCount() > 0) { // Si el nombre ya existe
-            $payload = json_encode(['error' => 'El documento no puede repetirse', 'code' => 400]);
-            $response->getBody()->write($payload);
-            return $response;
-        } else {
-            $sql = "INSERT INTO inquilinos (nombre, apellido, documento, email, activo) 
-                    VALUES (:nombre, :apellido, :documento, :email, :activo)";
-            $stmt = $connection->prepare($sql);
-            $stmt->bindParam(':nombre', $datos['nombre']);
-            $stmt->bindParam(':apellido', $datos['apellido']);
-            $stmt->bindParam(':documento', $datos['documento']);
-            $stmt->bindParam(':email', $datos['email']);
-            $stmt->bindParam(':activo', $datos['activo'], PDO::PARAM_BOOL);
-            $stmt->execute();
-    
-            $payload = json_encode([
-                'status' => 'success',
-                'code' => 201, 
-                'data' => 'Operación exitosa'
-            ]);
-            $response->getBody()->write($payload);
-            return $response;
-        }
-    } catch (PDOException $e) {
-        $payload = json_encode([
-            'status' => 'error',
-            'mensaje' => $e->getMessage()
-        ]); 
-        $response->getBody()->write($payload);
-        return $response;      
-    }   
 });
 
 //3 B
@@ -70,67 +70,65 @@ $app->PUT('/inquilinos/{id}/editar', function ($request, $response, $args){
 
     $camposRequeridos = ['nombre', 'apellido', 'documento', 'email', 'activo'];
     $errores=[];
-    $tipos=['string', 'string', 'integer', 'string', 'string'];
-    validarTipos($datos,$camposRequeridos, $tipos, $errores);
-    if (!empty($errores)){
-        $payload = json_encode(['error' => $errores, 'code' => 400]);
-        $response->getBody()->write($payload);
-        return $response;
-    }
+    $tipos=['string', 'string', 'integer', 'string', 'boolean'];
+    $longitudes = [20,15,0,20,0];
+    validarTipos($datos,$camposRequeridos, $tipos, $longitudes, $errores);
 
-    $datos['activo'] = filter_var($datos['activo'], FILTER_VALIDATE_BOOLEAN); // Convertimos a boolean
+    if (empty($errores)){
+        try{
+            $connection = getConnection();
     
-    try{
-        $connection = getConnection();
-
-        $sql = "SELECT * FROM inquilinos WHERE id = '" . $args['id'] . "'";
-        $consultaRepetido = $connection->query($sql);
-
-        if ($consultaRepetido->rowCount() == 0) { 
-            $payload = json_encode(['error' => 'Debe ingresar un ID que exista en la base de datos', 'code' => 400]);
+            $sql = "SELECT * FROM inquilinos WHERE id = '" . $args['id'] . "'";
+            $consultaRepetido = $connection->query($sql);
+    
+            if ($consultaRepetido->rowCount() == 0) { 
+                array_push($errores, $args['id'] . " No existe en la tabla inquilinos");
+            }else{
+                $sql = "SELECT * FROM inquilinos WHERE documento = '" . $datos['documento'] . "' AND id != '" . $args['id'] . "'";
+                $consultaRepetido = $connection->query($sql);
+        
+                if ($consultaRepetido->rowCount() > 0) { 
+                    array_push($errores, "El documento " . $datos['documento'] . " no puede repetirse");
+                }else{
+                    $sql = "UPDATE inquilinos SET apellido = :apellido, nombre = :nombre, documento = :documento, activo = :activo, email = :email WHERE id = :id";
+                    $stmt = $connection->prepare($sql);
+                    $stmt->bindParam(':nombre', $datos['nombre']);
+                    $stmt->bindParam(':apellido', $datos['apellido']);
+                    $stmt->bindParam(':documento', $datos['documento']);
+                    $stmt->bindParam(':email', $datos['email']);
+                    $stmt->bindParam(':activo', $datos['activo'], PDO::PARAM_BOOL);
+                    $stmt->bindParam(':id', $args['id']);
+                    $stmt->execute();
+                
+                    $payload = json_encode([
+                        'status' => 'success',
+                        'code' => 201, 
+                        'data' => 'Operación exitosa'
+                    ]);
+                    $response->getBody()->write($payload);
+                    return $response;
+                }
+            }
+           
+        }catch (PDOException $e) {
+            $payload = json_encode([
+                'status' => 'error',
+                'mensaje' => $e->getMessage()
+            ]); 
             $response->getBody()->write($payload);
-            return $response;
-        }
+            return $response;      
+        } 
+    } 
 
-        $sql = "SELECT * FROM inquilinos WHERE documento = '" . $datos['documento'] . "' AND id != '" . $args['id'] . "'";
-        $consultaRepetido = $connection->query($sql);
-
-        if ($consultaRepetido->rowCount() > 0) { 
-            $payload = json_encode(['error' => 'El documento no puede repetirse', 'code' => 400]);
-            $response->getBody()->write($payload);
-            return $response;
-        }
-
-        $sql = "UPDATE inquilinos SET apellido = :apellido, nombre = :nombre, documento = :documento, activo = :activo, email = :email WHERE id = :id";
-        $stmt = $connection->prepare($sql);
-        $stmt->bindParam(':nombre', $datos['nombre']);
-        $stmt->bindParam(':apellido', $datos['apellido']);
-        $stmt->bindParam(':documento', $datos['documento']);
-        $stmt->bindParam(':email', $datos['email']);
-        $stmt->bindParam(':activo', $datos['activo'], PDO::PARAM_BOOL);
-        $stmt->bindParam(':id', $args['id']);
-        $stmt->execute();
+    $payload = json_encode(['error' => $errores, 'code' => 400]);
+    $response->getBody()->write($payload);
+    return $response;
     
-        $payload = json_encode([
-            'status' => 'success',
-            'code' => 201, 
-            'data' => 'Operación exitosa'
-        ]);
-        $response->getBody()->write($payload);
-        return $response;
-    
-    }catch (PDOException $e) {
-        $payload = json_encode([
-            'status' => 'error',
-            'mensaje' => $e->getMessage()
-        ]); 
-        $response->getBody()->write($payload);
-        return $response;      
-    }   
 });
 
 //3 C
 $app->DELETE('/inquilinos/{id}/eliminar',function ($request, $response, $args){
+    $errores=[];
     try{
         $connection = getConnection();
 
@@ -138,32 +136,28 @@ $app->DELETE('/inquilinos/{id}/eliminar',function ($request, $response, $args){
         $consultaRepetido = $connection->query($sql);
 
         if ($consultaRepetido->rowCount() == 0) { 
-            $payload = json_encode(['error' => 'Debe ingresar un ID que exista en la base de datos', 'code' => 400]);
-            $response->getBody()->write($payload);
-            return $response;
-        }
+            array_push($errores, $args['id'] . " no existe en la tabla inquilinos");
+        }else{
+            $sql = "SELECT * FROM reservas WHERE inquilino_id = '" . $args['id'] . "'";
+            $consultaRepetido = $connection->query($sql);
 
-        $sql = "SELECT * FROM reservas WHERE inquilino_id = '" . $args['id'] . "'";
-        $consultaRepetido = $connection->query($sql);
-
-        if ($consultaRepetido->rowCount() > 0) { 
-            $payload = json_encode(['error' => 'El inquilino tiene reservas asociadas', 'code' => 400]);
-            $response->getBody()->write($payload);
-            return $response;
-        }
-
-        $sql = 'DELETE FROM inquilinos WHERE id = :id';
-        $stmt= $connection->prepare($sql);
-        $stmt->bindParam(':id', $args['id']);
-        $stmt->execute();
-        $payload = json_encode([
-            'status' => 'success',
-            'code' => 201, 
-            'data' => 'Operación exitosa'
-        ]);
-        $response->getBody()->write($payload);
-        return $response;
-    
+            if ($consultaRepetido->rowCount() > 0) { 
+                array_push ($errores,"El inquilino " . $args['id'] . " tiene reservas asociadas");
+            }else{
+                $sql = 'DELETE FROM inquilinos WHERE id = :id';
+                $stmt= $connection->prepare($sql);
+                $stmt->bindParam(':id', $args['id']);
+                $stmt->execute();
+                $payload = json_encode([
+                    'status' => 'success',
+                    'code' => 201, 
+                    'data' => 'Operación exitosa'
+                ]);
+                $response->getBody()->write($payload);
+                return $response;
+            }
+        } 
+        
     }catch (PDOException $e) {
         $payload = json_encode([
             'status' => 'error',
@@ -172,6 +166,10 @@ $app->DELETE('/inquilinos/{id}/eliminar',function ($request, $response, $args){
         $response->getBody()->write($payload);
         return $response;      
     } 
+
+    $payload = json_encode(['error' => $errores, 'code' => 400]);
+    $response->getBody()->write($payload);
+    return $response;
 });
 
 //3 D
