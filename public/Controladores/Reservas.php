@@ -242,7 +242,11 @@ $app->DELETE('/reservas/{id}/eliminar',function ($request, $response, $args){
 $app->GET('/reservas/listar', function (Request $request, Response $response){
     $connection = getConnection(); 
     try {
-        $query = $connection->query('SELECT * FROM reservas');
+        $query = $connection->query('SELECT r.*, i.apellido AS apellido_inquilino, i.nombre AS nombre_inquilino, l.nombre AS localidad, t.nombre AS tipo_de_propiedad FROM reservas r 
+        INNER JOIN inquilinos i ON r.inquilino_id = i.id 
+        INNER JOIN propiedades p 
+        INNER JOIN localidades l ON p.localidad_id = l.id 
+        INNER JOIN tipo_propiedades t ON p.tipo_propiedad_id = t.id');
         $tipos = $query->fetchAll(PDO::FETCH_ASSOC);
 
         $payload = json_encode([
