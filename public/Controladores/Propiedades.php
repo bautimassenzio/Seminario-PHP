@@ -233,24 +233,107 @@ $app->DELETE('/propiedades/{id}/eliminar', function ($request, $response, $args)
     return $response;
 });
 
-$app->GET('/propiedades', function (Request $request, Response $response){
-    $connection = getConnection(); 
+//4 D
+$app->GET('/propiedades/listar', function (Request $request, Response $response) {
+    $connection = getConnection();
+    
     try {
-        $query = $connection->query('SELECT * FROM propiedades');
-        $tipos = $query->fetchAll(PDO::FETCH_ASSOC);
+        $datos = $request->getQueryParams(); 
+
+        $sql = 'SELECT 
+            propiedades.*,
+            localidades.nombre AS localidad,
+            tipo_propiedades.nombre AS tipo_de_propiedad
+            FROM propiedades
+            INNER JOIN localidades ON propiedades.localidad_id = localidades.id
+            INNER JOIN tipo_propiedades ON propiedades.tipo_propiedad_id = tipo_propiedades.id
+            WHERE 1 = 1';
+
+        if (isset($datos['disponible'])) {
+            $disponible = filter_var($datos['disponible'], FILTER_VALIDATE_BOOLEAN);
+            $sql .= " AND propiedades.disponible = :disponible ";
+        }
+
+        if (isset($datos['localidad_id'])) {
+            $sql .= " AND propiedades.localidad_id = :localidad_id ";
+        }
+
+        if (isset($datos['fecha_inicio_disponibilidad'])) {
+            $sql .= " AND propiedades.fecha_inicio_disponibilidad = :fecha_inicio_disponibilidad ";
+        }
+
+        if (isset($datos['cantidad_huespedes'])) {
+            $sql .= " AND propiedades.cantidad_huespedes = :cantidad_huespedes ";
+        }
+
+        $consulta = $connection->prepare($sql);
+
+        if (isset($disponible)) {
+            $consulta->bindParam(':disponible', $disponible, PDO::PARAM_BOOL);
+        }
+        if (isset($datos['localidad_id'])) {
+            $consulta->bindParam(':localidad_id', $datos['localidad_id'], PDO::PARAM_INT);
+        }
+        if (isset($datos['fecha_inicio_disponibilidad'])) {
+            $consulta->bindParam(':fecha_inicio_disponibilidad', $datos['fecha_inicio_disponibilidad'], PDO::PARAM_STR);
+        }
+        if (isset($datos['cantidad_huespedes'])) {
+            $consulta->bindParam(':cantidad_huespedes', $datos['cantidad_huespedes'], PDO::PARAM_INT);
+        }
+
+        $consulta->execute();
+        $data = $consulta->fetchAll(PDO::FETCH_ASSOC);
 
         $payload = json_encode([
             'status' => 'success',
             'code' => 200,
-            'data' => $tipos
+            'data' => $data
         ]);
 
         $response->getBody()->write($payload);
         return $response->withHeader('Content-Type', 'application/json');
+
+    } catch (PDOException $e) {
+        $error_message = $e->getMessage();
+        $payload = json_encode([
+            'status' => 'error',
+            'code' => 400,
+            'message' => 'Error en la base de datos: ' . $error_message,
+        ]);
+
+        $response->getBody()->write($payload);
+        return $response->withHeader('Content-Type', 'application/json');
+    } 
+});
+
+//4 E
+$app->GET('/propiedades/{id}/ver-propiedad', function (Request $request, Response $response, $args){
+    $connection = getConnection(); 
+    try {
+        $sql = "SELECT * FROM propiedades WHERE id = '" . $args['id'] . "'";
+        $consultaRepetido = $connection->query($sql);
+
+        if ($consultaRepetido->rowCount() > 0) { 
+            $tabla = $consultaRepetido->fetchAll(PDO::FETCH_ASSOC);
+            $payload = json_encode(['status' => 'success', 'code' => 200, 'data' => $tabla]);
+            $response->getBody()->write($payload);
+            return $response;
+        }
+        
+        $payload = json_encode([
+            'status' => 'error',
+            'code' => 400, 
+            'data' => 'No se encontro el id ' . $args['id'] . ' en la tabla propiedades'
+        ]);
+        $response->getBody()->write($payload);
+        return $response;
+
+
     } catch (PDOException $e) {
         $payload = json_encode([
             'status' => 'success',
             'code' => 400,
+            'data' => $e->getMessage()
         ]);
 
         $response->getBody()->write($payload);
