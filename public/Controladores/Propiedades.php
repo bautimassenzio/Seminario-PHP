@@ -310,7 +310,11 @@ $app->GET('/propiedades/listar', function (Request $request, Response $response)
 $app->GET('/propiedades/{id}/ver-propiedad', function (Request $request, Response $response, $args){
     $connection = getConnection(); 
     try {
-        $sql = "SELECT * FROM propiedades WHERE id = '" . $args['id'] . "'";
+        $sql = "SELECT p.*, l.nombre AS localidad, t.nombre AS tipo 
+        FROM propiedades p 
+        INNER JOIN localidades l ON p.localidad_id = l.id
+        INNER JOIN tipo_propiedades t ON p.tipo_propiedad_id = t.id
+        WHERE p.id = '" . $args['id'] . "'";
         $consultaRepetido = $connection->query($sql);
 
         if ($consultaRepetido->rowCount() > 0) { 
