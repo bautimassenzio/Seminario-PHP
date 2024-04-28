@@ -22,7 +22,7 @@ function validarTipos ($datos, $campos, $tipos, $longitudes, &$errores){
                 case 'string':
                     if (is_numeric($datos[$campo])){
                         array_push($errores,"El campo " . $campo . " debe ser del tipo " . $tipo);
-                    } elseif (strlen($datos[$campo])>$longitud){
+                    } elseif ($longitud>0 && strlen($datos[$campo])>$longitud){
                         array_push($errores, "El campo " . $campo . " excede la longitud maxima de " . $longitud);
                     }
                     break;
@@ -33,7 +33,43 @@ function validarTipos ($datos, $campos, $tipos, $longitudes, &$errores){
                     break;
                 case 'datetime':
                     $date = DateTime::createFromFormat('Y-m-d', $datos[$campo]);
-                    if ($date === false || $date->format('Y-m-d') != $datos['fecha_desde']){
+                    if ($date === false || $date->format('Y-m-d') != $datos[$campo]){
+                        array_push($errores, "El campo " . $campo . " debe ser del tipo " . $tipo . " (ANIO - MES - DIA)");
+                    }
+                    break;
+                case 'boolean':
+                    $datos[$campo] = filter_var($datos[$campo], FILTER_VALIDATE_BOOLEAN);
+                    break;
+                default:
+                array_push($errores,"Tipo de dato no valido para el campo ". $campo);
+            }
+        }
+    }
+}
+
+function validarNoRequeridos (&$datos, $campos, $tipos, $longitudes, &$errores){
+    foreach($campos as $indice => $campo){
+        if (!isset($datos[$campo]) || (empty($datos[$campo]) && $datos[$campo] != 0) || trim($datos[$campo])===''){
+            $datos[$campo]=null;
+        } else{
+            $tipo = $tipos[$indice];
+            $longitud = $longitudes[$indice];
+            switch($tipo){
+                case 'string':
+                    if (is_numeric($datos[$campo])){
+                        array_push($errores,"El campo " . $campo . " debe ser del tipo " . $tipo);
+                    } elseif ($longitud>0 && strlen($datos[$campo])>$longitud){
+                        array_push($errores, "El campo " . $campo . " excede la longitud maxima de " . $longitud);
+                    }
+                    break;
+                case 'integer':
+                    if (!is_numeric($datos[$campo])){
+                        array_push($errores,"El campo " . $campo . " debe ser del tipo " . $tipo);
+                    }
+                    break;
+                case 'datetime':
+                    $date = DateTime::createFromFormat('Y-m-d', $datos[$campo]);
+                    if ($date === false || $date->format('Y-m-d') != $datos[$campo]){
                         array_push($errores, "El campo " . $campo . " debe ser del tipo " . $tipo . " (ANIO - MES - DIA)");
                     }
                     break;
