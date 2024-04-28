@@ -180,15 +180,10 @@ $app->PUT('/propiedades/{id}/editar', function ($request, $response, $args) {
   
 });
 
-$app->delete('/propiedades/{id}', function ($request, $response, $args) {
-    $id = (int) $args['id']; // Obtener el ID de la URL correctamente
-
-    if (empty($id)) { // Verificar si el ID está presente y no es nulo
-        $payload = json_encode(['error' => "El ID es requerido", 'code' => 400]);
-        $response->getBody()->write($payload);
-        return $response->withStatus(400);
-    }
-
+//4 C
+$app->DELETE('/propiedades/{id}/eliminar', function ($request, $response, $args) {
+    $id = $args['id']; 
+    $errores = [];
     try {
         $connection = getConnection();
 
@@ -197,23 +192,32 @@ $app->delete('/propiedades/{id}', function ($request, $response, $args) {
         $consulta->execute();
 
         if ($consulta->rowCount() == 0) {
-            $payload = json_encode(['error' => "El ID de propiedad no existe", 'code' => 404]);
-            $response->getBody()->write($payload);
-            return $response->withStatus(404);
+            array_push ($errores,"El id " . $id . " no existe en la tabla propiedades");
+        }else{
+
+            $consulta = $connection->prepare("SELECT * FROM reservas WHERE propiedad_id = :id");
+            $consulta->bindParam(':id', $id);
+            $consulta->execute();
+
+            if ($consulta->rowCount() > 0){
+                array_push($errores, "La propiedad " . $id . " tiene reservas asociadas");
+            }else{
+
+                $sql = 'DELETE FROM propiedades WHERE id = :id';
+                $stmt = $connection->prepare($sql);
+                $stmt->bindParam(':id', $id);
+                $stmt->execute();
+        
+                $payload = json_encode([
+                    'status' => 'success',
+                    'code' => 200,
+                    'data' => 'Operacion exitosa'
+                ]);
+                $response->getBody()->write($payload);
+                return $response->withStatus(200);
+            }
         }
 
-        $sql = 'DELETE FROM propiedades WHERE id = :id';
-        $stmt = $connection->prepare($sql);
-        $stmt->bindParam(':id', $id);
-        $stmt->execute();
-
-        $payload = json_encode([
-            'status' => 'success',
-            'code' => 200,
-            'data' => 'Operacion exitosa'
-        ]);
-        $response->getBody()->write($payload);
-        return $response->withStatus(200);
     } catch (PDOException $e) {
         $payload = json_encode([
             'status' => 'error',
@@ -223,6 +227,10 @@ $app->delete('/propiedades/{id}', function ($request, $response, $args) {
         $response->getBody()->write($payload);
         return $response->withStatus(400);
     }
+
+    $payload = json_encode(['error' => $errores, 'code' => 400]);
+    $response->getBody()->write($payload);
+    return $response;
 });
 
 $app->GET('/propiedades', function (Request $request, Response $response){
