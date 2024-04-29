@@ -151,7 +151,7 @@ $app->DELETE('/localidades/{id}/eliminar',function ($request, $response, $args){
             }
         }
         
-    }catch (PDOException $e){ //En caso de error, informo el error de $e
+    }catch (PDOException $e){ 
         $payload = json_encode([
             'status' => 'error',
             'code' => 400,

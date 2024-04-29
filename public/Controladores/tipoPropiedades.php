@@ -84,13 +84,13 @@ $app->PUT('/tipos_propiedad/{id}/editar', function ($request, $response, $args){
                 if ($consulta_repetido->rowCount()>0){
                     array_push ($errores, "El nombre " . $nombre . " ya existe en la tabla");
                 } else {
-                    $sql = ('UPDATE tipo_propiedades SET nombre = :nombre WHERE id=:id'); //Aca preparo la consulta sql
+                    $sql = ('UPDATE tipo_propiedades SET nombre = :nombre WHERE id=:id');
                     $stmt = $connection->prepare($sql); 
-                    $stmt->bindParam(':nombre',$nombre); //Asigno parametros para la consulta
+                    $stmt->bindParam(':nombre',$nombre); 
                     $stmt->bindParam(':id', $id);
                     $stmt->execute();
             
-                    $payload = json_encode([ //Genero json donde indica el resultado de mi operacion
+                    $payload = json_encode([ 
                         'status' => 'success',
                         'code' => 200,
                         'data' => 'Opeacion exitosa'
@@ -100,7 +100,7 @@ $app->PUT('/tipos_propiedad/{id}/editar', function ($request, $response, $args){
                 }
             }
 
-        }catch (PDOException $e){ //En caso de error, informo el error de $e
+        }catch (PDOException $e){ 
             $payload = json_encode([
                 'status' => 'error',
                 'code' => 400,
@@ -147,7 +147,7 @@ $app->DELETE('/tipos_propiedad/{id}/eliminar',function ($request, $response, $ar
             } 
         }
         
-    }catch (PDOException $e){ //En caso de error, informo el error de $e
+    }catch (PDOException $e){ 
         $payload = json_encode([
             'status' => 'error',
             'code' => 400,
