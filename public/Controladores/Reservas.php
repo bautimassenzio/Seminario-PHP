@@ -67,7 +67,7 @@ $app->POST('/reservas/crear', function ($request, $response, $args){
                 $payload = json_encode([
                     'status' => 'success',
                     'code' => 201, 
-                'data' => 'Operación exitosa'
+                'data' => 'Operacion exitosa'
                 ]);
                 $response->getBody()->write($payload);
                 return $response;
@@ -215,7 +215,7 @@ $app->DELETE('/reservas/{id}/eliminar',function ($request, $response, $args){
                 $payload = json_encode([
                     'status' => 'success',
                     'code' => 201, 
-                    'data' => 'Operación exitosa'
+                    'data' => 'Operacion exitosa'
                 ]);
                 $response->getBody()->write($payload);
                 return $response;

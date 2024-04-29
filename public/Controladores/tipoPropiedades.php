@@ -73,11 +73,12 @@ $app->PUT('/tipos_propiedad/{id}/editar', function ($request, $response, $args){
         try{
             $connection=getConnection();
             $id = $args['id'];
+            $nombre = $datos['nombre'];
             $sql = "SELECT * FROM tipo_propiedades WHERE id = '" . $id . "'";
             $consulta_repetido = $connection->query($sql);
 
             if ($consulta_repetido->rowCount()==0){
-                array_push($errores, "El id " . $id . " ya existe en la tabla");
+                array_push($errores, "El id " . $id . " no existe en la tabla");
             }else{
                 $sql = "SELECT * FROM tipo_propiedades WHERE nombre = '" . $nombre . "' AND id != '" . $id . "'";
                 $consulta_repetido = $connection->query($sql);

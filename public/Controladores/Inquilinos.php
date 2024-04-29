@@ -28,7 +28,7 @@ $app->POST('/inquilinos/crear', function ($request, $response, $args) {
             $consultaRepetido = $connection->query($sql);
 
             if ($consultaRepetido->rowCount() > 0) { 
-                array_push ($errores, "El documento " . $datos['documento'] . " no puede repetirse");
+                array_push ($errores, "El documento " . $datos['documento'] . " ya existe en la tabla");
             }else {
                 $sql = "INSERT INTO inquilinos (nombre, apellido, documento, email, activo) 
                         VALUES (:nombre, :apellido, :documento, :email, :activo)";
@@ -82,7 +82,7 @@ $app->PUT('/inquilinos/{id}/editar', function ($request, $response, $args){
             $consultaRepetido = $connection->query($sql);
     
             if ($consultaRepetido->rowCount() == 0) { 
-                array_push($errores, $args['id'] . " No existe en la tabla inquilinos");
+                array_push($errores, "El id " . $args['id'] . " no existe en la tabla inquilinos");
             }else{
                 $sql = "SELECT * FROM inquilinos WHERE documento = '" . $datos['documento'] . "' AND id != '" . $args['id'] . "'";
                 $consultaRepetido = $connection->query($sql);
@@ -103,7 +103,7 @@ $app->PUT('/inquilinos/{id}/editar', function ($request, $response, $args){
                     $payload = json_encode([
                         'status' => 'success',
                         'code' => 201, 
-                        'data' => 'Operación exitosa'
+                        'data' => 'Operacion exitosa'
                     ]);
                     $response->getBody()->write($payload);
                     return $response;
@@ -136,7 +136,7 @@ $app->DELETE('/inquilinos/{id}/eliminar',function ($request, $response, $args){
         $consultaRepetido = $connection->query($sql);
 
         if ($consultaRepetido->rowCount() == 0) { 
-            array_push($errores, $args['id'] . " no existe en la tabla inquilinos");
+            array_push($errores,"El id " . $args['id'] . " no existe en la tabla inquilinos");
         }else{
             $sql = "SELECT * FROM reservas WHERE inquilino_id = '" . $args['id'] . "'";
             $consultaRepetido = $connection->query($sql);

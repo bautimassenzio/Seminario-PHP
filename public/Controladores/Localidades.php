@@ -27,7 +27,7 @@ $app->POST('/localidades/crear', function ($request, $response, $args) {
         $consulta_repetido = $connection->query($sql);
         
         if ($consulta_repetido->rowCount()>0){ 
-            array_push($errores,"El nombre debe ser unico");
+            array_push($errores,"El nombre " . $nombre . " ya existe en la tabla");
         }else{
             $sql = ('INSERT INTO localidades (nombre) VALUES (:nombre)');
             $stmt = $connection->prepare($sql);

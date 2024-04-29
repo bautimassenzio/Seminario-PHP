@@ -66,7 +66,7 @@ $app->POST('/propiedades/crear', function ($request, $response, $args){
                    $payload = json_encode([
                       'status' => 'success',
                       'code' => 201, 
-                  'data' => 'Operación exitosa'
+                  'data' => 'Operacion exitosa'
                   ]);
                   $response->getBody()->write($payload);
                   return $response;
@@ -156,7 +156,7 @@ $app->PUT('/propiedades/{id}/editar', function ($request, $response, $args) {
                        $payload = json_encode([
                           'status' => 'success',
                           'code' => 201, 
-                      'data' => 'Operación exitosa'
+                      'data' => 'Operacion exitosa'
                       ]);
                       $response->getBody()->write($payload);
                       return $response;
