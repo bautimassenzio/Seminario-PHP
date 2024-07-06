@@ -1,0 +1,35 @@
+.container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding-top: 150px;
+    padding-bottom: 300px;
+
+}
+
+
+.form-container {
+    background-color: #f9f9f9;
+    padding: 25px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    width: 500px;
+    height: 700px;
+    max-width: 800px;
+}
+
+.form-columns {
+    display: flex;
+    justify-content: space-between;
+}
+
+.column {
+    display: flex;
+    flex-direction: column;
+    width: 48%;
+}
+
+img{
+    max-width: 300px;
+    max-height: 300px;
+}

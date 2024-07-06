@@ -1,0 +1,36 @@
+.message {
+    padding: 15px;
+    text-align: center;
+    position: fixed;
+    top: 20px; 
+    left: 50%;
+    transform: translateX(-50%);
+    width: auto;
+    max-width: 80%;
+    z-index: 9999;
+    animation: slideDown 0.5s ease, fadeOut 0.5s forwards 2s;
+    background-color: rgb(30, 144, 255);
+    color: white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+}
+
+@keyframes slideDown {
+    from {
+        top: -50px;
+        opacity: 0;
+    }
+    to {
+        top: 20px; 
+        opacity: 1;
+    }
+}
+
+@keyframes fadeOut {
+    from {
+        opacity: 1;
+    }
+    to {
+        opacity: 0;
+    }
+}
