@@ -2,6 +2,9 @@
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Slim\Factory\AppFactory;
+use Slim\Middleware\ErrorMiddleware;
+use Tuupola\Middleware\CorsMiddleware;
+
 
 require __DIR__ . '/../vendor/autoload.php';
 $app = AppFactory::create();
@@ -10,6 +13,15 @@ $app->setBasePath('/Proyecto/public');
 $app->addBodyParsingMiddleware(); 
 $app->addRoutingMiddleware();
 $app->addErrorMiddleware(true, true, true);
+
+$app->add(new CorsMiddleware([
+    "origin" => ["http://localhost:3000"], // Permite el acceso desde tu frontend
+    "methods" => ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    "headers.allow" => ["Authorization", "Content-Type"],
+    "headers.expose" => [],
+    "credentials" => false,
+    "cache" => 0,
+]));
 
 function validarTipos ($datos, $campos, $tipos, $longitudes, &$errores){
     foreach($campos as $indice => $campo){
@@ -83,6 +95,8 @@ function validarNoRequeridos (&$datos, $campos, $tipos, $longitudes, &$errores){
     }
 }
 
+
+
 //controladores
 include_once 'Controladores/Conexion.php';
 include_once 'Controladores/Localidades.php';
@@ -90,7 +104,6 @@ include_once 'Controladores/Inquilinos.php';
 include_once 'Controladores/tipoPropiedades.php';
 include_once 'Controladores/Propiedades.php';
 include_once 'Controladores/Reservas.php';
-
 
 
 $app->run();

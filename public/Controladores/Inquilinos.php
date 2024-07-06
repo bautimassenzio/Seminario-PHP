@@ -10,7 +10,7 @@ $app->addRoutingMiddleware();
 $app->addErrorMiddleware(true, true, true);
 
 //3 A
-$app->POST('/inquilinos/crear', function ($request, $response, $args) {
+$app->POST('/inquilinos', function ($request, $response, $args) {
     $datos = $request->getParsedBody(); 
     
     $camposRequeridos = ['nombre', 'apellido', 'documento', 'email', 'activo'];
@@ -51,6 +51,7 @@ $app->POST('/inquilinos/crear', function ($request, $response, $args) {
         } catch (PDOException $e) {
             $payload = json_encode([
                 'status' => 'error',
+                'code' => 400,
                 'mensaje' => $e->getMessage()
             ]); 
             $response->getBody()->write($payload);
@@ -58,14 +59,16 @@ $app->POST('/inquilinos/crear', function ($request, $response, $args) {
         }   
     }
 
-    $payload = json_encode(['error' => $errores, 'code' => 400]);
+    $payload = json_encode([
+        'status' => 'error',
+        'code' => 400, 
+        'mensaje' => $errores]);
     $response->getBody()->write($payload);
-    return $response;
-    
+    return $response->withHeader('Content-Type', 'application/json');
 });
 
 //3 B
-$app->PUT('/inquilinos/{id}/editar', function ($request, $response, $args){
+$app->PUT('/inquilinos/{id}', function ($request, $response, $args){
     $datos = $request->getParsedBody();
 
     $camposRequeridos = ['nombre', 'apellido', 'documento', 'email', 'activo'];
@@ -103,7 +106,7 @@ $app->PUT('/inquilinos/{id}/editar', function ($request, $response, $args){
                     $payload = json_encode([
                         'status' => 'success',
                         'code' => 201, 
-                        'data' => 'Operacion exitosa'
+                        'mensaje' => 'Operacion exitosa'
                     ]);
                     $response->getBody()->write($payload);
                     return $response;
@@ -113,6 +116,7 @@ $app->PUT('/inquilinos/{id}/editar', function ($request, $response, $args){
         }catch (PDOException $e) {
             $payload = json_encode([
                 'status' => 'error',
+                'code' => 400,
                 'mensaje' => $e->getMessage()
             ]); 
             $response->getBody()->write($payload);
@@ -120,14 +124,16 @@ $app->PUT('/inquilinos/{id}/editar', function ($request, $response, $args){
         } 
     } 
 
-    $payload = json_encode(['error' => $errores, 'code' => 400]);
+    $payload = json_encode([
+        'status' => 'error',
+        'code' => 400, 
+        'mensaje' => $errores]);
     $response->getBody()->write($payload);
-    return $response;
-    
+    return $response->withHeader('Content-Type', 'application/json');
 });
 
 //3 C
-$app->DELETE('/inquilinos/{id}/eliminar',function ($request, $response, $args){
+$app->DELETE('/inquilinos/{id}',function ($request, $response, $args){
     $errores=[];
     try{
         $connection = getConnection();
@@ -161,19 +167,23 @@ $app->DELETE('/inquilinos/{id}/eliminar',function ($request, $response, $args){
     }catch (PDOException $e) {
         $payload = json_encode([
             'status' => 'error',
+            'code' => 400,
             'mensaje' => $e->getMessage()
         ]); 
         $response->getBody()->write($payload);
         return $response;      
     } 
 
-    $payload = json_encode(['error' => $errores, 'code' => 400]);
+    $payload = json_encode([
+        'status' => 'error',
+        'code' => 400, 
+        'mensaje' => $errores]);
     $response->getBody()->write($payload);
-    return $response;
+    return $response->withHeader('Content-Type', 'application/json');
 });
 
 //3 D
-$app->GET('/inquilinos/listar', function (Request $request, Response $response){
+$app->GET('/inquilinos', function (Request $request, Response $response){
     $connection = getConnection(); 
     try {
         $query = $connection->query('SELECT * FROM inquilinos');
@@ -200,7 +210,7 @@ $app->GET('/inquilinos/listar', function (Request $request, Response $response){
 });
 
 //3 E
-$app->GET('/inquilinos/{id}/ver-inquilino', function (Request $request, Response $response, $args){
+$app->GET('/inquilinos/{id}', function (Request $request, Response $response, $args){
     $connection = getConnection(); 
     try {
         $sql = "SELECT * FROM inquilinos WHERE id = '" . $args['id'] . "'";

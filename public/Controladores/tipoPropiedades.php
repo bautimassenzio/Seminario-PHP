@@ -11,7 +11,7 @@ $app->addErrorMiddleware(true, true, true);
 
 
 //2 A
-$app->POST('/tipos_propiedad/crear', function ($request, $response, $args) {
+$app->POST('/tipos_propiedad', function ($request, $response, $args) {
     $datos= $request->getParsedBody(); 
     $errores=[];
     $campos=['nombre'];
@@ -38,7 +38,7 @@ $app->POST('/tipos_propiedad/crear', function ($request, $response, $args) {
                 $payload = json_encode([
                     'status' => 'success',
                     'code' => 201, 
-                    'data' => 'Opeacion exitosa'
+                    'mensaje' => 'Opeacion exitosa'
                 ]);
                 $response->getBody()->write($payload);
                 return $response;
@@ -46,21 +46,24 @@ $app->POST('/tipos_propiedad/crear', function ($request, $response, $args) {
         } catch (PDOException $e){
             $payload = json_encode([
                 'status' => 'error',
-                'mensaje' => $e->getMessage()
-            ]); 
+                'code' => 400, 
+                'mensaje' => $errores]);
             $response->getBody()->write($payload);
-            return $response;      
+            return $response->withHeader('Content-Type', 'application/json');
         }
     }
 
-    $payload = json_encode(['error' => $errores, 'code' => 400]);
+    $payload = json_encode([
+        'status' => 'error',
+        'code' => 400, 
+        'mensaje' => $errores]);
     $response->getBody()->write($payload);
-    return $response; 
+    return $response->withHeader('Content-Type', 'application/json');
    
 });
 
 //2 B
-$app->PUT('/tipos_propiedad/{id}/editar', function ($request, $response, $args){
+$app->PUT('/tipos_propiedad/{id}', function ($request, $response, $args){
     $datos= $request->getParsedBody(); 
     $errores=[];
     $campos=['nombre'];
@@ -94,7 +97,7 @@ $app->PUT('/tipos_propiedad/{id}/editar', function ($request, $response, $args){
                     $payload = json_encode([ 
                         'status' => 'success',
                         'code' => 200,
-                        'data' => 'Opeacion exitosa'
+                        'mensaje' => 'Operacion exitosa'
                     ]);
                     $response->getBody()->write($payload);
                     return $response;
@@ -104,20 +107,22 @@ $app->PUT('/tipos_propiedad/{id}/editar', function ($request, $response, $args){
         }catch (PDOException $e){ 
             $payload = json_encode([
                 'status' => 'error',
-                'code' => 400,
-                'mensaje' => $e->getMessage()
-            ]); 
+                'code' => 400, 
+                'mensaje' => $e->getMessage()]);
             $response->getBody()->write($payload);
-            return $response;
+            return $response->withHeader('Content-Type', 'application/json');
         }
     }
-    $payload = json_encode(['error' => $errores, 'code' => 400]);
+    $payload = json_encode([
+        'status' => 'error',
+        'code' => 400, 
+        'mensaje' => $errores]);
     $response->getBody()->write($payload);
-    return $response; 
+    return $response->withHeader('Content-Type', 'application/json');
 });
 
 //2 C
-$app->DELETE('/tipos_propiedad/{id}/eliminar',function ($request, $response, $args){
+$app->DELETE('/tipos_propiedad/{id}',function ($request, $response, $args){
     $id= $args['id'];
     $errores=[];
     try{
@@ -141,7 +146,7 @@ $app->DELETE('/tipos_propiedad/{id}/eliminar',function ($request, $response, $ar
                 $payload = json_encode([ 
                     'status' => 'success',
                     'code' => 200,
-                    'data' => 'Opeacion exitosa'
+                    'mensaje' => 'Operacion exitosa'
                 ]);
                 $response->getBody()->write($payload);
                 return $response;
@@ -155,19 +160,22 @@ $app->DELETE('/tipos_propiedad/{id}/eliminar',function ($request, $response, $ar
             'mensaje' => $e->getMessage()
         ]); 
         $response->getBody()->write($payload);
-        return $response;
+        return $response->withHeader('Content-Type', 'application/json');
     }
 
-    $payload = json_encode(['error' => $errores, 'code' => 400]);
+    $payload = json_encode([
+        'status' => 'error',
+        'code' => 400, 
+        'mensaje' => $errores]);
     $response->getBody()->write($payload);
-    return $response; 
+    return $response->withHeader('Content-Type', 'application/json');
 });
 
 //2 D
-$app->GET('/tipos_propiedad/listar', function (Request $request, Response $response){
+$app->GET('/tipos_propiedad', function (Request $request, Response $response){
     $connection = getConnection(); 
     try {
-        $query = $connection->query('SELECT nombre FROM tipo_propiedades');
+        $query = $connection->query('SELECT * FROM tipo_propiedades');
         $tipos = $query->fetchAll(PDO::FETCH_ASSOC);
 
         $payload = json_encode([
@@ -180,10 +188,9 @@ $app->GET('/tipos_propiedad/listar', function (Request $request, Response $respo
         return $response->withHeader('Content-Type', 'application/json');
     } catch (PDOException $e) {
         $payload = json_encode([
-            'status' => 'success',
-            'code' => 400,
-        ]);
-
+            'status' => 'error',
+            'code' => 400, 
+            'mensaje' => $e->getMessage()]);
         $response->getBody()->write($payload);
         return $response->withHeader('Content-Type', 'application/json');
     }

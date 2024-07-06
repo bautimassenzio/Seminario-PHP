@@ -10,7 +10,7 @@ $app->addRoutingMiddleware();
 $app->addErrorMiddleware(true, true, true);
 
 //1 A
-$app->POST('/localidades/crear', function ($request, $response, $args) {
+$app->POST('/localidades', function ($request, $response, $args) {
     $datos= $request->getParsedBody();
     $errores=[];
     $campos=['nombre'];
@@ -46,6 +46,7 @@ $app->POST('/localidades/crear', function ($request, $response, $args) {
     } catch (PDOException $e){
         $payload = json_encode([
             'status' => 'error',
+            'code' => 400,
             'mensaje' => $e->getMessage()
         ]); 
         $response->getBody()->write($payload);
@@ -53,14 +54,17 @@ $app->POST('/localidades/crear', function ($request, $response, $args) {
     }
    }
 
-   $payload = json_encode(['error' => $errores, 'code' => 400]);
-   $response->getBody()->write($payload);
-   return $response; 
+   $payload = json_encode([
+    'status' => 'error',
+    'code' => 400, 
+    'mensaje' => $errores]);
+    $response->getBody()->write($payload);
+    return $response->withHeader('Content-Type', 'application/json'); 
   
 });
 
 //1 B
-$app->PUT('/localidades/{id}/editar', function ($request, $response, $args){
+$app->PUT('/localidades/{id}', function ($request, $response, $args){
     $datos= $request->getParsedBody();
     $errores=[];
     $campos=['nombre'];
@@ -111,15 +115,18 @@ $app->PUT('/localidades/{id}/editar', function ($request, $response, $args){
         }
     }
 
-    $payload = json_encode(['error' => $errores, 'code' => 400]);
+    $payload = json_encode([
+        'status' => 'error',
+        'code' => 400, 
+        'mensaje' => $errores]);
     $response->getBody()->write($payload);
-    return $response; 
+    return $response->withHeader('Content-Type', 'application/json');  
 
 });
 
 
 //1 C
-$app->DELETE('/localidades/{id}/eliminar',function ($request, $response, $args){
+$app->DELETE('/localidades/{id}',function ($request, $response, $args){
     $id= $args['id'];
     $errores=[];
     try{
@@ -160,16 +167,19 @@ $app->DELETE('/localidades/{id}/eliminar',function ($request, $response, $args){
         $response->getBody()->write($payload);
         return $response;
     }
-    $payload = json_encode(['error' => $errores, 'code' => 400]);
+    $payload = json_encode([
+        'status' => 'error',
+        'code' => 400, 
+        'mensaje' => $errores]);
     $response->getBody()->write($payload);
-    return $response; 
+    return $response->withHeader('Content-Type', 'application/json'); 
 });
 
 //1 D
-$app->GET('/localidades/listar', function(request $request, response $response){
+$app->GET('/localidades', function(request $request, response $response){
     $connection = getConnection(); //Obtiene la conexion a la base de datos
     try {
-        $query = $connection->query('SELECT nombre FROM localidades');
+        $query = $connection->query('SELECT * FROM localidades');
         $tipos = $query->fetchAll(PDO::FETCH_ASSOC);
         $payload = json_encode([
             'status' => 'success',
@@ -180,8 +190,9 @@ $app->GET('/localidades/listar', function(request $request, response $response){
         return $response->withHeader('Content-Type', 'application/json');
     } catch (PDOException $e) {
         $payload = json_encode([
-            'status' => 'success',
+            'status' => 'error',
             'code' => 400,
+            'mensaje' => $e->getMessage()
         ]);
         $response->getBody()->write($payload);
         return $response->withHeader('Content-Type', 'application/json');        

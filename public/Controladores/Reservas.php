@@ -11,7 +11,7 @@ $app->addErrorMiddleware(true, true, true);
 
 
 //5 A
-$app->POST('/reservas/crear', function ($request, $response, $args){
+$app->POST('/reservas', function ($request, $response, $args){
     $datos = $request->getParsedBody();
     $camposRequeridos = ['propiedad_id', 'inquilino_id', 'fecha_desde', 'cantidad_noches'];
     $tipos = ['integer', 'integer', 'datetime', 'integer'];
@@ -67,7 +67,7 @@ $app->POST('/reservas/crear', function ($request, $response, $args){
                 $payload = json_encode([
                     'status' => 'success',
                     'code' => 201, 
-                'data' => 'Operacion exitosa'
+                    'mensaje' => 'Operacion exitosa'
                 ]);
                 $response->getBody()->write($payload);
                 return $response;
@@ -76,6 +76,7 @@ $app->POST('/reservas/crear', function ($request, $response, $args){
         } catch (PDOException $e) {
             $payload = json_encode([
                 'status' => 'error',
+                'code' => 201,
                 'mensaje' => $e->getMessage()
             ]); 
             $response->getBody()->write($payload);
@@ -83,14 +84,16 @@ $app->POST('/reservas/crear', function ($request, $response, $args){
         }
     }
 
-    $payload = json_encode(['error' => $errores, 'code' => 400]);
+    $payload = json_encode([
+        'status' => 'error',
+        'code' => 400, 
+        'mensaje' => $errores]);
     $response->getBody()->write($payload);
-    return $response;
-       
+    return $response->withHeader('Content-Type', 'application/json');
 });
 
 //5 B
-$app->PUT('/reservas/{id}/editar', function ($request, $response, $args){
+$app->PUT('/reservas/{id}', function ($request, $response, $args){
     $datos = $request->getParsedBody();
     $camposRequeridos = ['propiedad_id', 'inquilino_id', 'fecha_desde', 'cantidad_noches'];
     $tipos = ['integer', 'integer', 'datetime', 'integer'];
@@ -162,7 +165,7 @@ $app->PUT('/reservas/{id}/editar', function ($request, $response, $args){
                         $payload = json_encode([
                             'status' => 'success',
                             'code' => 201, 
-                        'data' => 'Operacion exitosa'
+                            'mensaje' => 'Operacion exitosa'
                         ]);
                         $response->getBody()->write($payload);
                         return $response;
@@ -174,6 +177,7 @@ $app->PUT('/reservas/{id}/editar', function ($request, $response, $args){
         }catch (PDOException $e) {
             $payload = json_encode([
                 'status' => 'error',
+                'code' => 201,
                 'mensaje' => $e->getMessage()
             ]); 
             $response->getBody()->write($payload);
@@ -181,14 +185,17 @@ $app->PUT('/reservas/{id}/editar', function ($request, $response, $args){
         } 
     }
 
-    $payload = json_encode(['error' => $errores, 'code' => 400]);
+    $payload = json_encode([
+        'status' => 'error',
+        'code' => 400, 
+        'mensaje' => $errores]);
     $response->getBody()->write($payload);
-    return $response;  
+    return $response->withHeader('Content-Type', 'application/json'); 
   
 });
 
 //5 C
-$app->DELETE('/reservas/{id}/eliminar',function ($request, $response, $args){ 
+$app->DELETE('/reservas/{id}',function ($request, $response, $args){ 
     $errores=[];
     try{
         $connection = getConnection();
@@ -205,7 +212,7 @@ $app->DELETE('/reservas/{id}/eliminar',function ($request, $response, $args){
             $stmt->bindParam(':id', $args ['id']);
             $stmt->bindParam(':fechaActual', $fechaActual);
             $stmt->execute();
-            if ($stmt->rowCount()==0){
+            if ($stmt->rowCount()==0){ 
                 array_push($errores, "La reserva " . $args['id'] . " ya comenzo");
             } else{
                 $sql = 'DELETE FROM reservas  WHERE id = :id';
@@ -215,7 +222,7 @@ $app->DELETE('/reservas/{id}/eliminar',function ($request, $response, $args){
                 $payload = json_encode([
                     'status' => 'success',
                     'code' => 201, 
-                    'data' => 'Operacion exitosa'
+                    'mensaje' => 'Operacion exitosa'
                 ]);
                 $response->getBody()->write($payload);
                 return $response;
@@ -226,41 +233,46 @@ $app->DELETE('/reservas/{id}/eliminar',function ($request, $response, $args){
     }catch (PDOException $e) {
         $payload = json_encode([
             'status' => 'error',
+            'code' => 201,
             'mensaje' => $e->getMessage()
         ]); 
         $response->getBody()->write($payload);
         return $response;      
     }
 
-    $payload = json_encode(['error' => $errores, 'code' => 400]);
+    $payload = json_encode([
+        'status' => 'error',
+        'code' => 400, 
+        'mensaje' => $errores]);
     $response->getBody()->write($payload);
-    return $response; 
+    return $response->withHeader('Content-Type', 'application/json');
 
 });
 
 //5 D
-$app->GET('/reservas/listar', function (Request $request, Response $response){
-    $connection = getConnection(); 
+$app->GET('/reservas', function (Request $request, Response $response) {
+    $connection = getConnection();
     try {
-        $query = $connection->query('SELECT r.*, i.apellido AS apellido_inquilino, i.nombre AS nombre_inquilino, l.nombre AS localidad, t.nombre AS tipo_de_propiedad FROM reservas r 
+        $query = $connection->query('SELECT r.*, i.apellido AS apellido_inquilino, i.nombre AS nombre_inquilino, l.nombre AS localidad, t.nombre AS tipo_de_propiedad, p.domicilio FROM reservas r 
         INNER JOIN inquilinos i ON r.inquilino_id = i.id 
-        INNER JOIN propiedades p 
+        INNER JOIN propiedades p ON r.propiedad_id = p.id
         INNER JOIN localidades l ON p.localidad_id = l.id 
         INNER JOIN tipo_propiedades t ON p.tipo_propiedad_id = t.id');
-        $tipos = $query->fetchAll(PDO::FETCH_ASSOC);
+        $reservas = $query->fetchAll(PDO::FETCH_ASSOC);
 
         $payload = json_encode([
             'status' => 'success',
             'code' => 200,
-            'data' => $tipos
+            'data' => $reservas
         ]);
 
         $response->getBody()->write($payload);
         return $response->withHeader('Content-Type', 'application/json');
     } catch (PDOException $e) {
         $payload = json_encode([
-            'status' => 'success',
+            'status' => 'error',
             'code' => 400,
+            'mensaje' => $e->getMessage()
         ]);
 
         $response->getBody()->write($payload);
